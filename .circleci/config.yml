@@ -63,9 +63,10 @@ jobs:
           name: Back-end build
           command: |
              # Your code here
+             cd backend
              npm i
              npm run lint
-             exit 1
+             
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -79,7 +80,7 @@ jobs:
           keys: [test-frontend]
       - run:
           name: test frontend
-          commands: |
+          command: |
              cd frontend
              npm install
              npm run test
@@ -94,7 +95,7 @@ jobs:
         keys: [test-backend]
      - run: 
         name: test backend
-        commands: |
+        command: |
            cd backend
            npm install
            npm run test

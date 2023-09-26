@@ -212,7 +212,7 @@ jobs:
       # attach workspace
       - checkout
       - add_ssh_keys:
-          fingerprints: ["c0:23:e5:0e:b5:a6:9b:c3:8d:51:24:40:54:d0:85:b2"] 
+          fingerprints: ["b1:bb:c0:19:57:08:99:ec:9f:51:e0:5f:99:46:87:d3"] 
       - attach_workspace:
           at: ~/
       - run:
@@ -231,7 +231,7 @@ jobs:
             ansible-playbook -i inventory.txt configure-server.yml
             #exit 1
       # Here's where you will add some code to rollback on failure      
-      - destroy-environment:
+      - destroy_environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
   
 
@@ -385,8 +385,8 @@ workflows:
           # filters:
           #   branches:
           #     only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
 #       - run-migrations:
 #           requires: [configure-infrastructure]
 #       - deploy-frontend:

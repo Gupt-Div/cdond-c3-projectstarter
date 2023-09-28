@@ -278,7 +278,55 @@ jobs:
       - run:  curl --insecure https://kvdb.io/GWWgRbTdJyn47ixgVQC3C3/migration_${CIRCLE_WORKFLOW_ID:0:7}     
       - destroy_environments:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-     # Here's where you will add some code to rollback on failure      
+     # Here's where you will add some code to rollback on failure  
+
+  deploy-frontend:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: python:3.9.1-alpine3.12
+      #- image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            apk update
+            apk add tar gzip 
+            apk add npm nodejs
+            apk add --update ansible aws-cli
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople" \
+              --output text)
+            export API_URL="http://${BACKEND_IP}:3030"           
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env                         
+            cat frontend/.env
+
+      - run:
+          name: Deploy frontend objects
+          command: |
+            # your code here
+            cd frontend
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      # Here's where you will add some code to rollback on failure      
+      - destroy_environments:
+         id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 
 #   deploy-frontend:
 #     docker:
@@ -398,8 +446,8 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-#       - deploy-frontend:
-#           requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
 #       - deploy-backend:
 #           requires: [run-migrations]
 #       - smoke-test:
